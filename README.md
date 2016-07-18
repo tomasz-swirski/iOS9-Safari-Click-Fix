@@ -6,3 +6,7 @@
  * This fix is blocking native event handlers from firing
  * (in some rare cases event will reach it's destination)
  * and it handles native event handlers basing on 'touchstart' and 'touchend' event.
+
+
+PLEASE MIND THE 'touchstart' and 'touchend' events being used to track event bubbling ant trigger 'click' ,'mousedown' and 'mouseup'.
+Therefor .stopPropagation() called on 'click' event will also block 'mouseup' event and 'touchend' handlers from execute.
