@@ -66,7 +66,7 @@ $(document).ready(function(){
 
     for(var i = 0; i < eventRepo.length; i++) {
 
-      var _eventType = eventRepo[i].namespace !== undefined
+      var _eventType = eventRepo[i].namespace
           ? eventType + '.' + eventRepo[i].namespace
           : eventType;
 
