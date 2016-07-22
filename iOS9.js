@@ -1,4 +1,6 @@
 /**
+ * jQuery 2.0+  REQUIRED
+ * ==============================================
  * iOS9 'click', 'mousedown' and 'mouseup' fix
  * ---------------------------------------------
  * Include this script in your poject to fix 'click', 'mousedown' and 'mouseup' event
@@ -10,6 +12,7 @@
  * ---------------------------------------------
  * Use at your own risk
  */
+
 $(document).ready(function(){
 
   /** Device is not iOS. There's no need to hack the planet. */
@@ -19,23 +22,6 @@ $(document).ready(function(){
 
   var EVENT_NAMESPACE = 'IOS9FIX';
   var MAX_DOM_DEPTH = 100;
-
-  /**
-   * Suppress event for $object.
-   * @param $object
-   * @param eventType
-   */
-  //var blockEventFor = function($object, eventType) {
-  //
-  //  $object.on(eventType + '.' + EVENT_NAMESPACE, function(event){
-  //    event.stopImmediatePropagation();
-  //  });
-  //
-  //  // move StopPropagation event to the beginning of event queue
-  //  var eventQueue = $._data($object.get(0), "events")[eventType];
-  //  var blockingEvent = eventQueue.pop();
-  //  eventQueue.unshift(blockingEvent);
-  //};
 
   /**
    * Suppress event for $object.
@@ -57,10 +43,11 @@ $(document).ready(function(){
           namespace: eventQueue[i].namespace
         });
       }
+
       $object.off(eventType);
     }
 
-    $object.on(eventType + '.' + EVENT_NAMESPACE, function(event){
+    $object.on(eventType + '.' + EVENT_NAMESPACE, '*', function(event){
       event.stopImmediatePropagation();
     });
 
@@ -81,6 +68,9 @@ $(document).ready(function(){
    * @param object originalEvent
    */
   var executeMockedEventHandlers = function($object, mockedEventType, originalEvent){
+    /** Let's say touch is mouse left button (by default touch event has .which === 0) */
+    originalEvent.which = 1;
+
     var mockedEventQueue, $target = $(originalEvent.target);
 
     if($._data($object.get(0), "events") !== undefined){
@@ -150,47 +140,9 @@ $(document).ready(function(){
    * Go through objects and suppress all selected events.
    */
   $.each([$(document), $(window), $('body'), $('html')], function(objectIndex, $object){
-    $.each(['click', 'mousedown', 'mouseup'], function(eventIndex, eventType){
+    $.each(['mousedown', 'click',  'mouseup'], function(eventIndex, eventType){
       blockEventFor($object, eventType);
     });
-  });
-
-  /**
-   * MOCK CLICK EVENT
-   */
-
-  /**
-   * Init Click-Mock for Dom $object
-   * @param $object
-   */
-  var initClickMock = function($object) {
-    var clickCancelationTimer, isClick;
-
-    $object.on('touchstart', function(){
-      isClick = true;
-      clickCancelationTimer = setTimeout(function(){
-        isClick = false;
-      }, 300);
-    });
-
-    $object.on('touchmove', function(){
-      isClick = false;
-    });
-
-    $object.on('touchend', function(event){
-      clearTimeout(clickCancelationTimer);
-      if(isClick){
-        executeMockedEventHandlers($object, 'click', event);
-      }
-    });
-  };
-
-
-  /**
-   * Init Click-Mock for objects...
-   */
-  $.each([$(document), $(window), $('body'), $('html')], function(objectIndex, $object){
-    initClickMock($object);
   });
 
 
@@ -236,6 +188,55 @@ $(document).ready(function(){
   $.each([$(document), $(window), $('body'), $('html')], function(objectIndex, $object){
     initMouseUpMock($object);
   });
+
+
+  /**
+   * MOCK CLICK EVENT
+   */
+
+  /**
+   * Init Click-Mock for Dom $object
+   * @param $object
+   */
+  var initClickMock = function($object) {
+    var clickCancelationTimer, isClick, cursorX, cursorY, target;
+
+    $object.on('touchstart', function(event){
+      isClick = true;
+
+      cursorX = event.originalEvent.touches[0].pageX;
+      cursorY = event.originalEvent.touches[0].pageY;
+      target = event.target;
+
+      /** Click Timeout */
+      clickCancelationTimer = setTimeout(function(){
+        isClick = false;
+      }, 300);
+    });
+
+    /** moved more than 10 px away from starting position */
+    $object.on('touchmove', function(event){
+      if(Math.abs(cursorX - event.originalEvent.touches[0].pageX) > 10 || Math.abs(cursorY - event.originalEvent.touches[0].pageY) > 10){
+        isClick = false;
+      }
+    });
+
+    $object.on('touchend', function(event){
+      clearTimeout(clickCancelationTimer);
+
+      if(isClick){
+        executeMockedEventHandlers($object, 'click', event);
+      }
+    });
+  };
+
+  /**
+   * Init Click-Mock for objects...
+   */
+  $.each([$(document), $(window), $('body'), $('html')], function(objectIndex, $object){
+    initClickMock($object);
+  });
+
 
 });
 
