@@ -1,3 +1,6 @@
+ [ jQuery 2.0+  must be included in project in order for this library to work ! ]
+
+
  * iOS9 'click', 'mousedown' and 'mouseup' fix
  * ---------------------------------------------
  * Include this script in your poject to fix 'click', 'mousedown' and 'mouseup' event
